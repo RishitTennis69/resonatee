@@ -101,21 +101,47 @@ const pillarList = document.querySelector("[data-pillar-list]");
 const pillarDetail = document.querySelector(".program-detail");
 const pillarButtons = document.querySelectorAll("[data-pillar]");
 const programBrowser = document.querySelector(".program-browser");
+let displayedPillarKey = null;
+let pillarTransitionTimer;
+let pillarCleanupTimer;
 
 const renderPillar = (key) => {
   const content = pillarContent[key];
   if (!content || !pillarTitle || !pillarNumber || !pillarList) return;
 
-  pillarTitle.textContent = content.title;
-  pillarNumber.textContent = content.number;
-  pillarList.innerHTML = content.items
-    .map((item) => `<li><i data-lucide="check" aria-hidden="true"></i><span>${item}</span></li>`)
-    .join("");
+  const updateContent = () => {
+    pillarTitle.textContent = content.title;
+    pillarNumber.textContent = content.number;
+    pillarList.innerHTML = content.items
+      .map((item) => `<li><i data-lucide="check" aria-hidden="true"></i><span>${item}</span></li>`)
+      .join("");
+    displayedPillarKey = key;
+    refreshIcons();
+  };
 
-  pillarDetail?.classList.remove("is-changing");
-  void pillarDetail?.offsetWidth;
-  pillarDetail?.classList.add("is-changing");
-  refreshIcons();
+  window.clearTimeout(pillarTransitionTimer);
+  window.clearTimeout(pillarCleanupTimer);
+
+  if (!pillarDetail || displayedPillarKey === null || reducedMotion) {
+    pillarDetail?.classList.remove("is-leaving", "is-entering");
+    updateContent();
+    return;
+  }
+
+  if (displayedPillarKey === key && !pillarDetail.classList.contains("is-leaving")) return;
+
+  pillarDetail.classList.remove("is-entering");
+  pillarDetail.classList.add("is-leaving");
+
+  pillarTransitionTimer = window.setTimeout(() => {
+    updateContent();
+    pillarDetail.classList.remove("is-leaving");
+    void pillarDetail.offsetWidth;
+    pillarDetail.classList.add("is-entering");
+    pillarCleanupTimer = window.setTimeout(() => {
+      pillarDetail.classList.remove("is-entering");
+    }, 540);
+  }, 180);
 };
 
 const selectPillar = (button) => {
@@ -162,15 +188,14 @@ if (curriculumList) {
   curriculumList.innerHTML = curriculum
     .map((week, index) => {
       const number = String(index + 1).padStart(2, "0");
-      const open = index === 0;
       return `
         <article class="curriculum-item">
-          <button class="curriculum-trigger" type="button" aria-expanded="${open}" aria-controls="week-${number}" data-week-trigger>
+          <button class="curriculum-trigger" type="button" aria-expanded="false" aria-controls="week-${number}" data-week-trigger>
             <span class="week-number">${number}</span>
             <span class="week-title">${week.title}</span>
             <i data-lucide="plus" aria-hidden="true"></i>
           </button>
-          <div class="curriculum-panel" id="week-${number}">
+          <div class="curriculum-panel" id="week-${number}" aria-hidden="true">
             <div><p>${week.copy}</p></div>
           </div>
         </article>
@@ -183,8 +208,15 @@ const curriculumTriggers = document.querySelectorAll("[data-week-trigger]");
 curriculumTriggers.forEach((trigger) => {
   trigger.addEventListener("click", () => {
     const isOpen = trigger.getAttribute("aria-expanded") === "true";
-    curriculumTriggers.forEach((item) => item.setAttribute("aria-expanded", "false"));
-    trigger.setAttribute("aria-expanded", String(!isOpen));
+    curriculumTriggers.forEach((item) => {
+      item.setAttribute("aria-expanded", "false");
+      document.getElementById(item.getAttribute("aria-controls"))?.setAttribute("aria-hidden", "true");
+    });
+
+    if (!isOpen) {
+      trigger.setAttribute("aria-expanded", "true");
+      document.getElementById(trigger.getAttribute("aria-controls"))?.setAttribute("aria-hidden", "false");
+    }
   });
 });
 

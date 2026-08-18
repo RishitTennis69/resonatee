@@ -11,7 +11,9 @@
   --text-dim: #8a8379;
   --accent: #df542f;
   --accent-dark: #b83b1e;
-  --cta-surface: #696660;
+  --cta-surface: #d95b36;
+  --cta-button: #e4e1db;
+  --cta-button-hover: #f1eee8;
   --accent-soft: rgba(223, 84, 47, 0.10);
   --accent-focus: rgba(223, 84, 47, 0.35);
   --accent-watermark: rgba(223, 84, 47, 0.055);
@@ -824,6 +826,15 @@ a {
   max-width: 680px;
 }
 
+.program-detail-copy,
+.program-detail-number {
+  transition:
+    opacity 180ms ease-out,
+    transform 420ms var(--ease-out),
+    filter 240ms ease-out;
+  will-change: opacity, transform;
+}
+
 .program-detail h3 {
   margin: var(--space-1) 0 var(--space-4);
   font-family: var(--font-display);
@@ -858,8 +869,30 @@ a {
   stroke-width: 1.75;
 }
 
-.program-detail.is-changing {
-  animation: content-change 360ms var(--ease-out) both;
+.program-detail.is-leaving .program-detail-copy,
+.program-detail.is-leaving .program-detail-number {
+  opacity: 0;
+  filter: blur(2px);
+  transform: translateY(-8px);
+}
+
+.program-detail.is-entering .program-detail-copy,
+.program-detail.is-entering .program-detail-number {
+  animation: pillar-content-in 520ms var(--ease-out) both;
+}
+
+@keyframes pillar-content-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
 }
 
 .inline-cta {
@@ -960,6 +993,7 @@ a {
   background: transparent;
   text-align: left;
   cursor: pointer;
+  transition: color 220ms ease-out, background-color 220ms ease-out;
 }
 
 .curriculum-trigger .week-number {
@@ -978,7 +1012,7 @@ a {
 .curriculum-trigger svg {
   width: 20px;
   height: 20px;
-  transition: transform 260ms var(--ease-out), color 180ms ease-out;
+  transition: transform 440ms var(--ease-out), color 220ms ease-out;
 }
 
 .curriculum-trigger:hover svg,
@@ -993,11 +1027,20 @@ a {
 .curriculum-panel {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 360ms var(--ease-out);
+  visibility: hidden;
+  transition:
+    grid-template-rows 520ms var(--ease-out),
+    visibility 0s linear 520ms;
 }
 
 .curriculum-panel > div {
+  min-height: 0;
   overflow: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition:
+    opacity 240ms ease-out,
+    transform 420ms var(--ease-out);
 }
 
 .curriculum-panel p {
@@ -1010,6 +1053,16 @@ a {
 
 .curriculum-trigger[aria-expanded="true"] + .curriculum-panel {
   grid-template-rows: 1fr;
+  visibility: visible;
+  transition:
+    grid-template-rows 560ms var(--ease-out),
+    visibility 0s linear 0s;
+}
+
+.curriculum-trigger[aria-expanded="true"] + .curriculum-panel > div {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 110ms;
 }
 
 .builds-section {
@@ -1050,7 +1103,8 @@ a {
   border-color: var(--border-mid);
 }
 
-.build-feature {
+.build-feature,
+.build-secondary {
   display: grid;
   grid-template-rows: auto 1fr;
   min-height: 700px;
@@ -1090,9 +1144,10 @@ a {
 
 .capstone-video-wrap {
   align-self: end;
-  margin: 0 var(--space-3) var(--space-3);
-  border: 1px solid var(--border-mid);
-  border-radius: var(--radius-md);
+  width: 100%;
+  margin: 0;
+  border-top: 1px solid var(--border-mid);
+  border-radius: 0;
   background: var(--dark-surface);
   overflow: hidden;
 }
@@ -1122,12 +1177,7 @@ a {
 }
 
 .build-secondary {
-  padding: var(--space-4);
-}
-
-.build-secondary .capstone-video-wrap {
-  margin-bottom: var(--space-4);
-  margin-inline: 0;
+  padding: 0;
 }
 
 .mentors-section {
@@ -1283,14 +1333,14 @@ a {
 }
 
 .enrollment-section .button-light {
-  color: var(--dark-text);
-  border-color: var(--dark-surface);
-  background: var(--dark-surface);
+  color: var(--text);
+  border-color: var(--cta-button);
+  background: var(--cta-button);
 }
 
 .enrollment-section .button-light:hover {
-  border-color: var(--text);
-  background: var(--text);
+  border-color: var(--cta-button-hover);
+  background: var(--cta-button-hover);
 }
 
 .site-footer {
@@ -1447,12 +1497,13 @@ a {
 
   .build-secondary {
     display: grid;
-    grid-template-columns: 0.8fr 1.2fr;
-    gap: var(--space-4);
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 0;
   }
 
   .build-secondary .capstone-video-wrap {
-    grid-row: span 5;
+    grid-row: auto;
     margin: 0;
   }
 
@@ -1674,12 +1725,12 @@ a {
     gap: var(--space-3);
   }
 
-  .build-feature {
+  .build-feature,
+  .build-secondary {
     min-height: 560px;
   }
 
-  .build-copy,
-  .build-secondary {
+  .build-copy {
     padding: var(--space-3);
   }
 
@@ -1688,16 +1739,12 @@ a {
     font-size: 32px;
   }
 
-  .build-feature .capstone-video-wrap {
-    margin: 0 var(--space-2) var(--space-2);
-  }
-
   .build-secondary {
-    display: block;
+    display: grid;
   }
 
   .build-secondary .capstone-video-wrap {
-    margin-bottom: var(--space-3);
+    margin: 0;
   }
 
   .mentor-roster {
